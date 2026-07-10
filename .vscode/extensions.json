@@ -1,0 +1,9 @@
+{
+  "recommendations": [
+    "redhat.ansible",
+    "DavidAnson.vscode-markdownlint",
+    "yzhang.markdown-all-in-one",
+    "redhat.vscode-yaml",
+    "GitHub.copilot"
+  ]
+}

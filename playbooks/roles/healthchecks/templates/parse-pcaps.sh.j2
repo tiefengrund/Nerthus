@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+INCOMING="/captures/incoming"
+PARSED="/captures/parsed"
+ARCHIVE="/captures/archive"
+
+mkdir -p "$INCOMING" "$PARSED" "$ARCHIVE"
+
+while true; do
+  shopt -s nullglob
+  for pcap in "$INCOMING"/*.pcap "$INCOMING"/*.pcapng; do
+    base="$(basename "$pcap")"
+    out="$PARSED/${base%.*}.json"
+
+    echo "Parsing $pcap -> $out"
+
+    if command -v tshark >/dev/null 2>&1; then
+      tshark -r "$pcap" -T ek > "$out"
+      mv "$pcap" "$ARCHIVE/$base"
+    else
+      echo '{"error":"tshark not found","file":"'"$base"'"}' > "$out"
+      mv "$pcap" "$ARCHIVE/$base"
+    fi
+  done
+  sleep 10
+done

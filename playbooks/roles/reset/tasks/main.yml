@@ -1,0 +1,36 @@
+---
+- name: Allow Elasticsearch wildcard index deletion
+  ansible.builtin.uri:
+    url: "{{ reset_elasticsearch_url }}/_cluster/settings"
+    method: PUT
+    body_format: json
+    body:
+      persistent:
+        action.destructive_requires_name: false
+    status_code:
+      - 200
+
+- name: Delete Elasticsearch indices
+  ansible.builtin.uri:
+    url: "{{ reset_elasticsearch_url }}/*"
+    method: DELETE
+    status_code:
+      - 200
+      - 404
+
+- name: Remove processed Filebeat state
+  ansible.builtin.file:
+    path: "{{ reset_filebeat_data_dir }}"
+    state: absent
+
+- name: Recreate Filebeat state directory
+  ansible.builtin.file:
+    path: "{{ reset_filebeat_data_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Remove ingestion containers
+  containers.podman.podman_container:
+    name: "{{ item }}"
+    state: absent
+  loop: "{{ reset_containers }}"

@@ -1,0 +1,9 @@
+---
+- name: Bootstrap tactical observability host
+  hosts: observability
+  become: true
+  tasks:
+    - name: Install base packages
+      ansible.builtin.package:
+        name: [podman, openssl]
+        state: present

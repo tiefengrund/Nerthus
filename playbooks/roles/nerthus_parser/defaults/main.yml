@@ -1,0 +1,2 @@
+---
+pcap_parser_data_dir: '{{ tactical_base_dir }}/parser'

@@ -1,0 +1,37 @@
+input {
+  beats {
+    port => 5044
+  }
+}
+
+
+filter {
+  if [type] == "Feature" and [geometry][type] == "Point" {
+    mutate {
+      add_field => {
+        "[location][lon]" => "%{[geometry][coordinates][0]}"
+        "[location][lat]" => "%{[geometry][coordinates][1]}"
+        "[event][dataset]" => "nerthus.borehole"
+        "[observer][name]" => "nerthus"
+      }
+    }
+
+    mutate {
+      convert => {
+        "[location][lon]" => "float"
+        "[location][lat]" => "float"
+        "[properties][endteufe]" => "float"
+        "[properties][hoehe]" => "float"
+      }
+    }
+  }
+}
+
+output {
+  elasticsearch {
+    hosts => ["{{ tactical_elasticsearch_url }}"]
+    index => "tactical-testreport-%{+YYYY.MM.dd}"
+  }
+  stdout { codec => rubydebug }
+}
+

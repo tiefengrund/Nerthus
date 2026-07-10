@@ -1,0 +1,6 @@
+---
+- name: Prepare runtime components
+  hosts: observability
+  become: true
+  gather_facts: true
+  roles: [tactical_pki, local_registry, image_loader]

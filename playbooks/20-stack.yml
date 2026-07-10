@@ -1,0 +1,21 @@
+---
+- name: Deploy observability stack
+  hosts: observability
+  become: true
+  gather_facts: true
+  #  roles:
+  #    - elastic_stack
+  #    - grafana
+  #    - pcap_parser
+  roles:
+    - role: elastic_stack
+      tags: elastic
+
+    - role: grafana
+      tags: grafana
+
+    - role: nerthus_parser
+      tags: parser
+
+    - role: healthchecks
+      tags: health

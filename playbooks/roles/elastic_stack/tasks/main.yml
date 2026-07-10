@@ -1,0 +1,118 @@
+---
+- name: Create Elastic Stack directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ elastic_data_dir }}"
+    - "{{ logstash_data_dir }}/pipeline"
+    - "{{ kibana_data_dir }}"
+    - "{{ filebeat_data_dir }}"
+- name: Render Logstash pipeline
+  ansible.builtin.template:
+    src: logstash.conf.j2
+    dest: "{{ logstash_data_dir }}/pipeline/logstash.conf"
+    mode: "0644"
+- name: Render Filebeat config
+  ansible.builtin.template:
+    src: filebeat.yml.j2
+    dest: "{{ filebeat_data_dir }}/filebeat.yml"
+    mode: "0644"
+- name: Set vm.max_map_count for Elasticsearch
+  ansible.posix.sysctl:
+    name: vm.max_map_count
+    value: "262144"
+    state: present
+    reload: true
+- name: Fix Elasticsearch data directory ownership
+  ansible.builtin.file:
+    path: "{{ elastic_data_dir }}"
+    state: directory
+    owner: "1000"
+    group: "0"
+    mode: "0775"
+    recurse: true
+- name: Start Elasticsearch
+  containers.podman.podman_container:
+    name: tactical-elasticsearch
+    image: localhost:5000/tactical/elasticsearch:{{ tactical_elastic_version }}
+    state: started
+    restart_policy: always
+    pull: never
+    # network: "{{ tactical_stack_network }}"
+    network: "{{ tactical_network_mode }}" # local, erstmal für dev
+    env:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: -Xms2g -Xmx2g
+    ports: [9200:9200]
+    volumes: ["{{ elastic_data_dir }}:/usr/share/elasticsearch/data:Z"]
+- name: Start Logstash
+  containers.podman.podman_container:
+    name: tactical-logstash
+    image: localhost:5000/tactical/logstash:{{ tactical_elastic_version }}
+    state: started
+    restart_policy: always
+    pull: never
+    # network: "{{ tactical_stack_network }}"
+    network: "{{ tactical_network_mode }}"
+    env:
+      XPACK_MONITORING_ENABLED: "false"
+      LS_JAVA_OPTS: -Xms2g -Xmx2g -Dio.netty.allocator.maxOrder=14
+    ports: [5044:5044, 9600:9600]
+    volumes: ["{{ logstash_data_dir }}/pipeline:/usr/share/logstash/pipeline:Z"]
+- name: Start Kibana
+  containers.podman.podman_container:
+    name: tactical-kibana
+    image: localhost:5000/tactical/kibana:{{ tactical_elastic_version }}
+    state: started
+    restart_policy: always
+    pull: never
+    # network: "{{ tactical_stack_network }}"
+    network: "{{ tactical_network_mode }}"
+    env:
+      # ELASTICSEARCH_HOSTS: "http://tactical-elasticsearch:9200"
+      ELASTICSEARCH_HOSTS: "{{ tactical_elasticsearch_url }}"
+    ports: [5601:5601]
+- name: Install CIFS tools
+  ansible.builtin.package:
+    name: cifs-utils
+    state: present
+- name: Create Samba mount dir
+  ansible.builtin.file:
+    path: "{{ tactical_samba_mount }}"
+    state: directory
+    mode: "0755"
+- name: Create CIFS credentials file
+  ansible.builtin.copy:
+    dest: /etc/tactical-samba.creds
+    mode: "0600"
+    content: |
+      username={{ tactical_samba_username }}
+      password={{ tactical_samba_password }}
+
+# - name: Mount Samba share read-only
+#  ansible.posix.mount:
+#    path: "{{ tactical_samba_mount }}"
+#    src: "{{ tactical_samba_src }}"
+#    fstype: cifs
+#    # opts falls mit pw opts: "ro,credentials=/etc/tactical-samba.creds,vers=3.1.1"
+#    opts: "ro,guest,vers=3.1.1,iocharset=utf8"
+#    state: mounted
+- name: Start Filebeat
+  containers.podman.podman_container:
+    name: tactical-filebeat
+    image: localhost:5000/tactical/filebeat:{{ tactical_elastic_version }}
+    state: started
+    restart_policy: always
+    pull: never
+    # network: "{{ tactical_stack_network }}"
+    network: "{{ tactical_network_mode }}"
+    user: root
+    volumes:
+      - "{{ filebeat_data_dir }}/filebeat.yml:/usr/share/filebeat/filebeat.yml:ro,Z"
+      - "{{ tactical_base_dir }}/events/incoming:/events/incoming:ro,Z"
+      - "{{ tactical_base_dir }}/captures/incoming:/captures/incoming:ro,Z"

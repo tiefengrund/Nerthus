@@ -1,0 +1,11 @@
+*.retry
+.vault_pass
+files/certs/*
+!files/certs/.gitkeep
+.venv/
+*~
+
+# Offline container image artifacts
+files/images/*.tar
+files/images/*.tar.gz
+files/images/*.tgz

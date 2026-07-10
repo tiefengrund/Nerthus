@@ -1,0 +1,4 @@
+---
+tactical_pki_dir: '{{ tactical_base_dir }}/certs'
+tactical_ca_common_name: Tactical Testfeld Root CA
+tactical_cert_days: 825

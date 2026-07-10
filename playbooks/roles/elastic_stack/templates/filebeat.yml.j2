@@ -1,0 +1,17 @@
+filebeat.inputs:
+  - type: filestream
+    id: geojson-input
+    paths:
+      - /data/filebeat/*.geojson
+
+    parsers:
+      - ndjson:
+          target: ""
+          add_error_key: true
+
+    close.on_state_change.inactive: 1m
+    clean_inactive: 24h
+
+logging.level: info
+
+

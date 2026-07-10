@@ -1,0 +1,6 @@
+---
+- name: Prepare tactical observability host
+  hosts: observability
+  become: true
+  gather_facts: true
+  roles: [prep]

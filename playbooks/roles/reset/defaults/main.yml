@@ -1,0 +1,7 @@
+---
+reset_elasticsearch_url: "http://localhost:9200"
+reset_filebeat_data_dir: "/opt/tactical/filebeat/data"
+
+reset_containers:
+  - tactical-filebeat
+  - tactical-logstash

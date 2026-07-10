@@ -1,0 +1,3 @@
+---
+# image_source_dir: "{{ playbook_dir }}/files/images"
+image_source_dir: "{{ inventory_dir }}/../../files/images"

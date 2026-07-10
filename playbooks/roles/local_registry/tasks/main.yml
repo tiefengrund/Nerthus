@@ -1,0 +1,58 @@
+---
+- name: Create tactical directories
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+  loop:
+    - "{{ tactical_base_dir }}"
+    - "{{ local_registry_data_dir }}"
+    - "{{ tactical_base_dir }}/captures/incoming"
+    - "{{ tactical_base_dir }}/captures/parsed"
+    - "{{ tactical_base_dir }}/captures/archive"
+    - "{{ tactical_base_dir }}/logstash/pipeline"
+    - "{{ tactical_base_dir }}/filebeat"
+    - "{{ tactical_base_dir }}/grafana"
+    - "{{ tactical_base_dir }}/parser"
+- name: Ensure podman network exists
+  containers.podman.podman_network:
+    name: "{{ tactical_stack_network }}"
+    state: present
+
+# - name: Start local registry
+#  containers.podman.podman_container:
+#    name: tactical-registry
+#    image: registry:2
+#    state: started
+#    restart_policy: always
+#    pull: never
+#    ports:
+#      - "{{ tactical_registry_port }}:5000"
+#    volumes:
+#      - "{{ local_registry_data_dir }}:/var/lib/registry:Z"
+#      - "{{ tactical_pki_dir }}/registry.crt:/certs/domain.crt:ro,Z"
+#      - "{{ tactical_pki_dir }}/registry.key:/certs/domain.key:ro,Z"
+#    env:
+#      REGISTRY_HTTP_ADDR: "0.0.0.0:5000"
+#      REGISTRY_HTTP_TLS_CERTIFICATE: "/certs/domain.crt"
+#      REGISTRY_HTTP_TLS_KEY: "/certs/domain.key"
+- name: Start local registry
+  containers.podman.podman_container:
+    name: tactical-registry
+    image: registry:2
+    state: started
+    restart_policy: always
+    pull: never
+    network: host
+    volumes:
+      - "{{ tactical_base_dir }}/events/incoming"
+      - "{{ tactical_base_dir }}/events/archive"
+      - "{{ local_registry_data_dir }}:/var/lib/registry:Z"
+      - "{{ tactical_pki_dir }}/registry.crt:/certs/domain.crt:ro,Z"
+      - "{{ tactical_pki_dir }}/registry.key:/certs/domain.key:ro,Z"
+    env:
+      REGISTRY_HTTP_ADDR: 0.0.0.0:5000
+      REGISTRY_HTTP_TLS_CERTIFICATE: /certs/domain.crt
+      REGISTRY_HTTP_TLS_KEY: /certs/domain.key

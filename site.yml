@@ -1,0 +1,11 @@
+---
+- name: Prepare tactical observability target
+  import_playbook: playbooks/00-prep.yml
+
+- name: Deploy tactical runtime
+  import_playbook: playbooks/10-runtime.yml
+
+- name: Deploy tactical stack
+  import_playbook: playbooks/20-stack.yml
+# - name: Cleanup tactical deployment
+#  import_playbook: playbooks/40-cleanup.yml

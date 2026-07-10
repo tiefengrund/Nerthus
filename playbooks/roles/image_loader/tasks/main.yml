@@ -1,0 +1,51 @@
+---
+- name: Check if we can call home
+  ansible.builtin.debug:
+    msg: >
+      📡 We can call home.
+      Consider checking for newer container releases before building the offline bundle.
+  when: we_are_online
+
+- name: Check if we can call home
+  ansible.builtin.debug:
+    msg: >
+      📡 Unable to call home.
+      Running in offline (air-gapped) mode.
+  when: not we_are_online
+
+- name: Check upstream releases
+  ansible.builtin.include_tasks: check_releases.yml
+  when: we_are_online | default(false)
+
+- name: Copy image archives to target
+  ansible.builtin.copy:
+    src: "{{ image_source_dir }}/{{ item.archive }}"
+    dest: "/tmp/{{ item.archive }}"
+    mode: "0644"
+  loop: "{{ tactical_images }}"
+  when: not we_are_online
+
+- name: Load images from tar archives
+  containers.podman.podman_load:
+    input: "/tmp/{{ item.archive }}"
+  loop: "{{ tactical_images }}"
+  when: not we_are_online # wenn wir offline sind, nehmen wir die tars die da sind,
+
+- name: Pull images from upstream registries
+  containers.podman.podman_image:
+    name: "{{ item.source_name }}"
+    state: present
+  loop: "{{ tactical_images }}"
+  when: we_are_online
+
+- name: Tag images for local registry
+  ansible.builtin.command:
+    cmd: "podman tag {{ item.source_name }} {{ item.target_name }}"
+  loop: "{{ tactical_images }}"
+  changed_when: true
+
+- name: Push images into local registry
+  ansible.builtin.command:
+    cmd: "podman push --tls-verify=false {{ item.target_name }}"
+  loop: "{{ tactical_images }}"
+  changed_when: true

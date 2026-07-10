@@ -1,0 +1,21 @@
+---
+- name: Render parser script
+  ansible.builtin.template:
+    src: parse-pcaps.sh.j2
+    dest: '{{ pcap_parser_data_dir }}/parse-pcaps.sh'
+    owner: root
+    group: root
+    mode: '0755'
+- name: Start PCAP parser worker
+  containers.podman.podman_container:
+    name: tactical-pcap-parser
+    image: localhost:5000/tactical/pcap-parser:{{ tactical_parser_version }}
+    state: started
+    restart_policy: always
+    pull: never
+    # network: "{{ tactical_stack_network }}"
+    network: '{{ tactical_network_mode }}'
+    volumes:
+      - '{{ tactical_base_dir }}/captures:/captures:Z'
+      - '{{ pcap_parser_data_dir }}/parse-pcaps.sh:/usr/local/bin/parse-pcaps.sh:ro,Z'
+    command: [/usr/local/bin/parse-pcaps.sh]

@@ -1,0 +1,5 @@
+---
+elastic_data_dir: "{{ tactical_base_dir }}/elasticsearch"
+logstash_data_dir: "{{ tactical_base_dir }}/logstash"
+kibana_data_dir: "{{ tactical_base_dir }}/kibana"
+filebeat_data_dir: "{{ tactical_base_dir }}/filebeat"

@@ -1,0 +1,8 @@
+---
+- name: Reset tactical observability development stack
+  hosts: localhost
+  become: true
+  gather_facts: false
+
+  roles:
+    - reset

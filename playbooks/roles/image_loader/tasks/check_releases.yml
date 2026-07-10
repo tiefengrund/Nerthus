@@ -1,0 +1,53 @@
+---
+- name: Define release checks
+  ansible.builtin.set_fact:
+    tactical_release_checks:
+      - name: Elasticsearch
+        image: docker.elastic.co/elasticsearch/elasticsearch
+        current: "{{ tactical_elastic_version }}"
+
+      - name: Logstash
+        image: docker.elastic.co/logstash/logstash
+        current: "{{ tactical_elastic_version }}"
+
+      - name: Kibana
+        image: docker.elastic.co/kibana/kibana
+        current: "{{ tactical_elastic_version }}"
+
+      - name: Filebeat
+        image: docker.elastic.co/beats/filebeat
+        current: "{{ tactical_elastic_version }}"
+
+      - name: Grafana
+        image: docker.io/grafana/grafana
+        current: "{{ tactical_grafana_version }}"
+
+- name: Query latest upstream releases
+  ansible.builtin.shell: |
+    set -o pipefail
+    skopeo list-tags docker://{{ item.image }} \
+      | jq -r '.Tags[]' \
+      | grep -E '^[0-9]+\.[0-9]+\.[0-9]+$' \
+      | sort -V \
+      | tail -4
+  args:
+    executable: /bin/bash
+  loop: "{{ tactical_release_checks }}"
+  register: tactical_available_releases
+  changed_when: false
+
+- name: Show newer upstream releases
+  ansible.builtin.debug:
+    msg: |
+      🍬 There is probably new candy at home.
+
+      {{ item.item.name }} {{ item.item.current }} is not the latest configured release.
+
+      Latest visible releases:
+      {% for release in item.stdout_lines %}
+      - {{ release }}
+      {% endfor %}
+  loop: "{{ tactical_available_releases.results }}"
+  when:
+    - item.stdout_lines | length > 0
+    - item.stdout_lines | last != item.item.current

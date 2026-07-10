@@ -1,0 +1,31 @@
+---
+- name: Create Grafana directory
+  ansible.builtin.file:
+    path: "{{ grafana_data_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Fix Grafana data directory ownership
+  ansible.builtin.file:
+    path: "{{ grafana_data_dir }}"
+    state: directory
+    owner: "472"
+    group: "0"
+    mode: "0775"
+    recurse: true
+
+- name: Start Grafana
+  containers.podman.podman_container:
+    name: tactical-grafana
+    image: "localhost:5000/tactical/grafana:{{ tactical_grafana_version }}"
+    state: started
+    restart_policy: always
+    pull: never
+    # network: "{{ tactical_stack_network }}"
+    network: "{{ tactical_network_mode }}"
+    ports:
+      - "3000:3000"
+    volumes:
+      - "{{ grafana_data_dir }}:/var/lib/grafana:Z"

@@ -1,0 +1,27 @@
+---
+- name: Install Podman runtime on Debian family
+  ansible.builtin.apt:
+    name: '{{ prep_debian_podman_packages }}'
+    state: present
+  when: [ansible_os_family == "Debian", prep_use_podman | bool]
+- name: Install Docker runtime on Debian family
+  ansible.builtin.apt:
+    name: '{{ prep_debian_docker_packages }}'
+    state: present
+  when: [ansible_os_family == "Debian", not prep_use_podman | bool]
+- name: Install Podman runtime on RedHat family
+  ansible.builtin.dnf:
+    name: '{{ prep_redhat_podman_packages }}'
+    state: present
+  when: [ansible_os_family == "RedHat", prep_use_podman | bool]
+- name: Install Docker runtime on RedHat family
+  ansible.builtin.dnf:
+    name: '{{ prep_redhat_docker_packages }}'
+    state: present
+  when: [ansible_os_family == "RedHat", not prep_use_podman | bool]
+- name: Enable Docker service when Docker is selected
+  ansible.builtin.service:
+    name: docker
+    enabled: true
+    state: started
+  when: not prep_use_podman | bool

@@ -1,0 +1,53 @@
+---
+# this is kinda prep for signing/generating certs in case we scale this up
+- name: Create PKI directory
+  ansible.builtin.file:
+    path: '{{ tactical_pki_dir }}'
+    state: directory
+    owner: root
+    group: root
+    mode: '0700'
+- name: Generate CA private key
+  community.crypto.openssl_privatekey:
+    path: '{{ tactical_pki_dir }}/tactical-ca.key'
+    size: 4096
+    type: RSA
+    mode: '0600'
+- name: Generate CA certificate signing request
+  community.crypto.openssl_csr:
+    path: '{{ tactical_pki_dir }}/tactical-ca.csr'
+    privatekey_path: '{{ tactical_pki_dir }}/tactical-ca.key'
+    common_name: '{{ tactical_ca_common_name }}'
+    basic_constraints: [CA:TRUE]
+    key_usage: [keyCertSign, cRLSign]
+- name: Generate self-signed CA certificate
+  community.crypto.x509_certificate:
+    path: '{{ tactical_pki_dir }}/tactical-ca.crt'
+    privatekey_path: '{{ tactical_pki_dir }}/tactical-ca.key'
+    csr_path: '{{ tactical_pki_dir }}/tactical-ca.csr'
+    provider: selfsigned
+    selfsigned_not_after: +{{ tactical_cert_days }}d
+    mode: '0644'
+- name: Generate registry key
+  community.crypto.openssl_privatekey:
+    path: '{{ tactical_pki_dir }}/registry.key'
+    size: 2048
+    mode: '0600'
+- name: Generate registry CSR
+  community.crypto.openssl_csr:
+    path: '{{ tactical_pki_dir }}/registry.csr'
+    privatekey_path: '{{ tactical_pki_dir }}/registry.key'
+    common_name: '{{ tactical_registry_host }}'
+    subject_alt_name:
+      - DNS:{{ tactical_registry_host }}
+      - DNS:localhost
+      - IP:127.0.0.1
+- name: Sign registry certificate
+  community.crypto.x509_certificate:
+    path: '{{ tactical_pki_dir }}/registry.crt'
+    csr_path: '{{ tactical_pki_dir }}/registry.csr'
+    ownca_path: '{{ tactical_pki_dir }}/tactical-ca.crt'
+    ownca_privatekey_path: '{{ tactical_pki_dir }}/tactical-ca.key'
+    provider: ownca
+    ownca_not_after: +{{ tactical_cert_days }}d
+    mode: '0644'

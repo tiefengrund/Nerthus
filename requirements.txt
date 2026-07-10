@@ -1,0 +1,10 @@
+ansible-core>=2.21,<2.22
+ansible-lint>=26,<27
+requests
+jmespath
+podman
+yamllint
+pytest
+molecule
+molecule-podman
+netaddr

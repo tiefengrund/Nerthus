@@ -1,0 +1,56 @@
+---
+tactical_base_dir: /srv/tactical
+
+tactical_domain: tactical.local
+tactical_registry_host: registry.tactical.local
+tactical_registry_port: 5000
+
+tactical_stack_network: tactical-net
+
+tactical_elastic_version: "8.15.3"
+tactical_grafana_version: "11.2.0"
+tactical_parser_version: "1.0.0"
+
+# dev only
+tactical_network_mode: host
+tactical_elasticsearch_url: "http://127.0.0.1:9200"
+tactical_logstash_host: "127.0.0.1"
+
+# inventories/testfeld/group_vars/all.yml
+
+tactical_images:
+  - archive: registry_2.tar
+    source_name: docker.io/library/registry:2
+    target_name: localhost:5000/tactical/registry:2
+
+  - archive: elasticsearch_8.15.3.tar
+    source_name: docker.elastic.co/elasticsearch/elasticsearch:8.15.3
+    target_name: localhost:5000/tactical/elasticsearch:8.15.3
+
+  - archive: logstash_8.15.3.tar
+    source_name: docker.elastic.co/logstash/logstash:8.15.3
+    target_name: localhost:5000/tactical/logstash:8.15.3
+
+  - archive: kibana_8.15.3.tar
+    source_name: docker.elastic.co/kibana/kibana:8.15.3
+    target_name: localhost:5000/tactical/kibana:8.15.3
+
+  - archive: grafana_11.2.0.tar
+    source_name: docker.io/grafana/grafana:11.2.0
+    target_name: localhost:5000/tactical/grafana:11.2.0
+
+  - archive: filebeat_8.15.3.tar
+    source_name: docker.elastic.co/beats/filebeat:8.15.3
+    target_name: localhost:5000/tactical/filebeat:8.15.3
+
+  - archive: tactical-pcap-parser_1.0.0.tar
+    source_name: tactical-pcap-parser:1.0.0
+    target_name: localhost:5000/tactical/pcap-parser:1.0.0
+
+# hier muss der fileserver hin
+# group_vars/all.yml
+tactical_samba_enabled: true
+tactical_samba_src: "//SERVER/SHARE"
+tactical_samba_mount: "/srv/tactical/samba/incoming"
+tactical_samba_username: "USER"
+tactical_samba_password: "PASS"

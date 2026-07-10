@@ -1,0 +1,81 @@
+---
+prep_base_dir: /opt/tactical
+prep_venv_dir: "{{ prep_base_dir }}/venv"
+
+prep_use_podman: true
+prep_install_tshark: true
+
+prep_common_packages:
+  - git
+  - curl
+  - jq
+  - unzip
+  - tar
+  - gzip
+  - openssl
+  - ca-certificates
+  - python3
+  - python3-pip
+  - python3-venv
+
+#
+# Debian / Ubuntu
+#
+prep_debian_podman_packages:
+  - podman
+  - buildah
+  - skopeo
+
+prep_debian_docker_packages:
+  - docker.io
+  - docker-compose-plugin
+
+#
+# RedHat / Rocky / Alma / Fedora
+#
+prep_redhat_podman_packages:
+  - podman
+  - buildah
+  - skopeo
+
+prep_redhat_docker_packages:
+  - docker
+  - docker-compose-plugin
+
+#
+# openSUSE / SLES
+#
+prep_suse_podman_packages:
+  - podman
+  - buildah
+  - skopeo
+
+prep_suse_docker_packages:
+  - docker
+  - docker-compose
+
+#
+# Arch Linux
+#
+prep_arch_podman_packages:
+  - podman
+  - buildah
+  - skopeo
+
+prep_arch_docker_packages:
+  - docker
+  - docker-compose
+
+#
+# Gentoo
+#
+prep_gentoo_podman_packages:
+  - app-containers/podman
+  - app-containers/buildah
+  - app-containers/skopeo
+
+prep_gentoo_docker_packages:
+  - app-containers/docker
+  - app-containers/docker-compose
+
+prep_tshark_package: tshark

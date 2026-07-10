@@ -1,0 +1,29 @@
+---
+images:
+  - name: registry
+    version: "2"
+    archive: registry_2.tar
+
+  - name: elasticsearch
+    version: "8.15.3"
+    archive: elasticsearch_8.15.3.tar
+
+  - name: logstash
+    version: "8.15.3"
+    archive: logstash_8.15.3.tar
+
+  - name: kibana
+    version: "8.15.3"
+    archive: kibana_8.15.3.tar
+
+  - name: grafana
+    version: "11.2.0"
+    archive: grafana_11.2.0.tar
+
+  - name: filebeat
+    version: "8.15.3"
+    archive: filebeat_8.15.3.tar
+
+  - name: tactical-pcap-parser
+    version: "1.0.0"
+    archive: tactical-pcap-parser_1.0.0.tar

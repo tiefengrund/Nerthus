@@ -1,0 +1,18 @@
+---
+extends: default
+
+ignore: |
+  .venv/**
+  .git/**
+  collections/**
+
+rules:
+  line-length:
+    max: 120
+    level: warning
+
+  comments:
+    min-spaces-from-content: 1
+
+  truthy:
+    allowed-values: ["true", "false"]

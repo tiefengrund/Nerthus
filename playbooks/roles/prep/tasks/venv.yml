@@ -1,0 +1,53 @@
+---
+- name: Create tactical base directory
+  ansible.builtin.file:
+    path: "{{ prep_base_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode: "0755"
+
+- name: Create Python virtual environment
+  ansible.builtin.command:
+    cmd: "python3 -m venv {{ prep_venv_dir }}"
+    creates: "{{ prep_venv_dir }}/bin/activate"
+
+- name: Copy Python requirements to target
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../requirements.txt"
+    dest: "{{ prep_base_dir }}/requirements.txt"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Upgrade pip in venv
+  ansible.builtin.command:
+    cmd: "{{ prep_venv_dir }}/bin/python -m pip install --upgrade pip"
+  changed_when: false
+
+- name: Install Python requirements in venv
+  ansible.builtin.command:
+    cmd: "{{ prep_venv_dir }}/bin/pip install -r {{ prep_base_dir }}/requirements.txt"
+  register: prep_pip_install
+  changed_when: >
+    'Successfully installed' in prep_pip_install.stdout or
+    'Installing collected packages' in prep_pip_install.stdout
+
+- name: Copy Ansible collection requirements to target
+  ansible.builtin.copy:
+    src: "{{ playbook_dir }}/../requirements.yml"
+    dest: "{{ prep_base_dir }}/requirements.yml"
+    owner: root
+    group: root
+    mode: "0644"
+
+- name: Install Ansible collections into project collection path
+  ansible.builtin.command:
+    cmd: >-
+      {{ prep_venv_dir }}/bin/ansible-galaxy collection install
+      -r {{ prep_base_dir }}/requirements.yml
+      -p {{ prep_base_dir }}/collections
+  register: prep_collection_install
+  changed_when: >
+    'Installing' in prep_collection_install.stdout or
+    'was installed successfully' in prep_collection_install.stdout

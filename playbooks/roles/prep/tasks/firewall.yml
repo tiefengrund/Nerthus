@@ -1,0 +1,18 @@
+---
+- name: Open tactical service ports with firewalld if available
+  ansible.posix.firewalld:
+    port: "{{ item }}"
+    permanent: true
+    immediate: true
+    state: enabled
+  loop:
+    - "3000/tcp" # Grafana
+    - "5000/tcp" # Local registry
+    - "5044/tcp" # Logstash Beats
+    - "5601/tcp" # Kibana
+    - "9200/tcp" # Elasticsearch
+  when:
+    - ansible_facts.services is defined
+    - "'firewalld.service' in ansible_facts.services"
+  register: prep_firewalld_ports
+  failed_when: false

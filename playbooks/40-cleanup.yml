@@ -1,0 +1,26 @@
+---
+- name: Cleanup tactical observability stack
+  hosts: observability
+  become: true
+  gather_facts: false
+
+  tasks:
+    - name: Stop tactical containers
+      containers.podman.podman_container:
+        name: "{{ item }}"
+        state: absent
+      loop:
+        - tactical-pcap-parser
+        - tactical-filebeat
+        - tactical-grafana
+        - tactical-kibana
+        - tactical-logstash
+        - tactical-elasticsearch
+        - tactical-registry
+
+    - name: Remove tactical network
+      containers.podman.podman_network:
+        name: "{{ tactical_stack_network | default('tactical-net') }}"
+        state: absent
+      register: cleanup_tactical_network
+      failed_when: false

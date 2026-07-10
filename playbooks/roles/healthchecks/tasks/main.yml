@@ -1,0 +1,86 @@
+---
+- name: Wait for local registry
+  ansible.builtin.uri:
+    url: https://127.0.0.1:5000/v2/
+    validate_certs: false
+    status_code: [200, 401]
+  register: registry_health
+  retries: 30
+  delay: 2
+  until: registry_health.status in [200, 401]
+- name: Wait for Elasticsearch HTTP
+  ansible.builtin.uri:
+    url: http://127.0.0.1:9200
+    method: GET
+    status_code: 200
+  register: elastic_http
+  retries: 60
+  delay: 2
+  until: elastic_http.status == 200
+- name: Wait for Elasticsearch cluster health
+  ansible.builtin.uri:
+    url: http://127.0.0.1:9200/_cluster/health
+    method: GET
+    status_code: 200
+    return_content: true
+  register: elastic_health
+  retries: 60
+  delay: 2
+  until:
+    - elastic_health.status == 200
+    - (elastic_health.json.status | default('red')) in ['green', 'yellow']
+- name: Wait for Kibana
+  ansible.builtin.uri:
+    url: http://127.0.0.1:5601/api/status
+    status_code: 200
+  register: kibana_health
+  retries: 60
+  delay: 2
+  until: kibana_health.status == 200
+- name: Wait for Grafana
+  ansible.builtin.uri:
+    url: http://127.0.0.1:3000/api/health
+    status_code: 200
+  register: grafana_health
+  retries: 60
+  delay: 2
+  until: grafana_health.status == 200
+- name: Wait for Logstash Beats input
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 5044
+    timeout: 120
+- name: Verify Logstash container is running
+  containers.podman.podman_container_info:
+    name: tactical-logstash
+  register: logstash_info
+- name: Fail if Logstash is not running
+  ansible.builtin.assert:
+    that:
+      - logstash_info.containers | length > 0
+      - logstash_info.containers[0].State.Status == "running"
+- name: Wait until Beats port is listening
+  ansible.builtin.wait_for:
+    host: 127.0.0.1
+    port: 5044
+    timeout: 60
+- name: Verify parser container exists
+  containers.podman.podman_container_info:
+    name: tactical-pcap-parser
+  register: parser_info
+- name: Fail if parser container is not running
+  ansible.builtin.assert:
+    that:
+      - parser_info.containers | length > 0
+      - parser_info.containers[0].State.Status == "running"
+    fail_msg: PCAP parser container is not running.
+- name: Summary
+  ansible.builtin.debug:
+    msg:
+      - 'Registry      : OK'
+      - 'Elasticsearch : OK'
+      - 'Logstash      : OK'
+      - 'Kibana        : OK'
+      - 'Grafana       : OK'
+      - 'Filebeat Port : OK'
+      - 'Parser        : OK'

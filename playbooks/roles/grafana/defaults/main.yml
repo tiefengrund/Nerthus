@@ -1,0 +1,2 @@
+---
+grafana_data_dir: "{{ tactical_base_dir }}/grafana"
