@@ -45,6 +45,7 @@ flowchart LR
     F --> G
     F --> H
     C --> I
+```
 
 wir deployen die analyse-infrastruktur via ansible
 
