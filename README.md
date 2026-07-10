@@ -1,8 +1,50 @@
 # Nerthus Stack
 
+[![Lint](https://github.com/tiefengrund/Nerthus/actions/workflows/lint.yml/badge.svg)](https://github.com/tiefengrund/Nerthus/actions/workflows/lint.yml)
+![Platform](https://img.shields.io/badge/platform-Linux-blue)
+![Ansible](https://img.shields.io/badge/automation-Ansible-black)
+![Air Gap](https://img.shields.io/badge/operation-air--gapped-success)
+![Status](https://img.shields.io/badge/status-proof%20of%20concept-orange)
+
 Inselnetzfähiger stack auf containerbasis, läuft im venv
 
+Nerthus is an air-gap capable platform for ingesting, normalizing,
+indexing and visualizing geological and hydrogeological data.
+
+The platform uses Ansible, containerized services, Filebeat, Logstash,
+Elasticsearch, Kibana and Grafana. Geological source data can be
+converted from legacy DBF datasets into GeoJSON for use both within
+Nerthus and in external GIS applications such as QGIS.
+
+## Project status
+
+Nerthus is currently a proof of concept under active development.
+Interfaces, roles and data mappings may still change.
+
 ## Ziel
+
+## Data flow
+
+```mermaid
+flowchart LR
+    A[DBF source data]
+    B[Nerthus parser]
+    C[GeoJSON]
+    D[Filebeat]
+    E[Logstash]
+    F[Elasticsearch]
+    G[Kibana]
+    H[Grafana]
+    I[QGIS]
+
+    A --> B
+    B --> C
+    C --> D
+    D --> E
+    E --> F
+    F --> G
+    F --> H
+    C --> I
 
 wir deployen die analyse-infrastruktur via ansible
 
